@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pensamiento Estratégico</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: system-ui, sans-serif; background: #0f172a; color: #f1f5f9; min-height: 100vh; }
+        
+        .screen {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .title {
+            font-size: 1.5rem;
+            color: #60a5fa;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #94a3b8;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        /* Login */
+        .login-box {
+            background: #1e293b;
+            border-radius: 20px;
+            padding: 30px;
+            width: 100%;
+            max-width: 350px;
+        }
+        
+        .login-title {
+            font-size: 1.3rem;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .input {
+            width: 100%;
+            padding: 15px;
+            border-radius: 12px;
+            border: 2px solid #475569;
+            background: #0f172a;
+            color: #f1f5f9;
+            font-size: 1rem;
+            margin-bottom: 15px;
+        }
+        
+        .input:focus {
+            outline: none;
+            border-color: #60a5fa;
+        }
+        
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
+            color: #64748b;
+        }
+        
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #475569;
+        }
+        
+        .divider span {
+            padding: 0 15px;
+        }
+        
+        .switch-text {
+            text-align: center;
+            margin-top: 20px;
+            color: #94a3b8;
+        }
+        
+        .switch-link {
+            color: #60a5fa;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        /* Pattern */
+        .pattern-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 80px);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .dot {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #1e293b;
+            border: 3px solid #475569;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #64748b;
+            transition: all 0.2s;
+        }
+        
+        .dot:hover {
+            background: #334155;
+        }
+        
+        .dot.selected {
+            background: #1e40af;
+            border-color: #60a5fa;
+            color: #60a5fa;
+        }
+        
+        .pattern-display {
+            font-size: 1.2rem;
+            color: #60a5fa;
+            margin-bottom: 20px;
+            min-height: 30px;
+        }
+        
+        .btn {
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            margin: 5px;
+            width: 100%;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #334155;
+            color: #f1f5f9;
+            border: 2px solid #475569;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-small {
+            width: auto;
+            padding: 12px 20px;
+        }
+        
+        .error {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #ef4444;
+            color: #fca5a5;
+            padding: 12px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div id="app"></div>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <script>
+        console.log('v8 - Login + Pattern');
+        
+        var checkFirebase = setInterval(function() {
+            if (typeof firebase !== 'undefined') {
+                clearInterval(checkFirebase);
+                startApp();
+            }
+        }, 100);
+        
+        function startApp() {
+            console.log('Firebase OK');
+            
+            firebase.initializeApp({
+                apiKey: "AIzaSyD5ipPXMUN3shXChD97UTsacq8axpLAOJY",
+                authDomain: "pensamiento-e.firebaseapp.com",
+                projectId: "pensamiento-e",
+                storageBucket: "pensamiento-e.firebasestorage.app",
+                messagingSenderId: "683297780430",
+                appId: "1:683297780430:web:a780dde6b04ab2514a969f"
+            });
+            
+            var auth = firebase.auth();
+            var selected = [];
+            var step = 1;
+            var firstPattern = '';
+            var error = '';
+            var userId = null;
+            var screen = 'loading';
+            var isRegister = false;
+            
+            auth.onAuthStateChanged(function(user) {
+                if (user) {
+                    userId = user.uid;
+                    var saved = localStorage.getItem('pattern_' + userId);
+                    screen = saved ? 'unlock' : 'setup';
+                } else {
+                    screen = 'login';
+                }
+                error = '';
+                render();
+            });
+            
+            function render() {
+                var app = document.getElementById('app');
+                
+                if (screen === 'loading') {
+                    app.innerHTML = '<div class="screen"><p>Cargando...</p></div>';
+                    return;
+                }
+                
+                if (screen === 'login') {
+                    var formTitle = isRegister ? 'Crear Cuenta' : 'Iniciar Sesión';
+                    var btnText = isRegister ? 'Crear Cuenta' : 'Entrar';
+                    var switchQ = isRegister ? '¿Ya tienes cuenta?' : '¿No tienes cuenta?';
+                    var switchA = isRegister ? 'Inicia sesión' : 'Regístrate';
+                    
+                    app.innerHTML = '<div class="screen">' +
+                        '<div class="title">♞ Pensamiento Estratégico</div>' +
+                        '<div class="subtitle">Analiza tus decisiones estratégicamente</div>' +
+                        '<div class="login-box">' +
+                        '<div class="login-title">' + formTitle + '</div>' +
+                        (error ? '<div class="error">' + error + '</div>' : '') +
+                        '<input type="email" id="emailInput" class="input" placeholder="Correo electrónico">' +
+                        '<input type="password" id="passInput" class="input" placeholder="Contraseña">' +
+                        '<button class="btn btn-primary" onclick="loginEmail()">'+btnText+'</button>' +
+                        '<div class="divider"><span>o</span></div>' +
+                        '<button class="btn btn-secondary" onclick="loginGoogle()">🔵 Continuar con Google</button>' +
+                        '<div class="switch-text">' + switchQ + ' <span class="switch-link" onclick="toggleRegister()">' + switchA + '</span></div>' +
+                        '</div>' +
+                        '</div>';
+                    return;
+                }
+                
+                if (screen === 'main') {
+                    app.innerHTML = '<div class="screen">' +
+                        '<div class="title">✅ ¡Bienvenido!</div>' +
+                        '<p style="color:#94a3b8;margin-bottom:30px">La app está funcionando correctamente</p>' +
+                        '<p style="color:#64748b;margin-bottom:30px;font-size:0.9rem">Ahora integraré el resto de la aplicación</p>' +
+                        '<button class="btn btn-secondary btn-small" onclick="logout()">Cerrar sesión</button>' +
+                        '</div>';
+                    return;
+                }
+                
+                // Pattern screen (setup o unlock)
+                var title = screen === 'setup' ? 
+                    (step === 1 ? 'Crea tu patrón' : 'Confirma tu patrón') : 
+                    'Ingresa tu patrón';
+                
+                var dots = '';
+                for (var i = 1; i <= 9; i++) {
+                    var isSelected = selected.indexOf(i) !== -1;
+                    var order = isSelected ? selected.indexOf(i) + 1 : i;
+                    dots += '<div class="dot ' + (isSelected ? 'selected' : '') + '" onclick="tapDot(' + i + ')">' + order + '</div>';
+                }
+                
+                var patternText = selected.length > 0 ? selected.join(' → ') : 'Toca los números';
+                
+                app.innerHTML = '<div class="screen">' +
+                    '<div class="title">♞ Pensamiento Estratégico</div>' +
+                    '<div class="subtitle">' + title + '</div>' +
+                    (error ? '<div class="error">' + error + '</div>' : '') +
+                    '<div class="pattern-grid">' + dots + '</div>' +
+                    '<div class="pattern-display">' + patternText + '</div>' +
+                    '<div class="buttons">' +
+                    '<button class="btn btn-secondary btn-small" onclick="clearDots()">Reiniciar</button>' +
+                    '<button class="btn btn-primary btn-small" onclick="confirmPattern()" ' + (selected.length < 4 ? 'disabled' : '') + '>Confirmar</button>' +
+                    '</div>' +
+                    '</div>';
+            }
+            
+            // Funciones globales
+            window.toggleRegister = function() {
+                isRegister = !isRegister;
+                error = '';
+                render();
+            };
+            
+            window.loginEmail = function() {
+                var email = document.getElementById('emailInput').value;
+                var pass = document.getElementById('passInput').value;
+                
+                if (!email || !pass) {
+                    error = 'Completa todos los campos';
+                    render();
+                    return;
+                }
+                
+                var promise = isRegister ? 
+                    auth.createUserWithEmailAndPassword(email, pass) : 
+                    auth.signInWithEmailAndPassword(email, pass);
+                
+                promise.catch(function(err) {
+                    var msgs = {
+                        'auth/email-already-in-use': 'Este correo ya está registrado',
+                        'auth/invalid-email': 'Correo inválido',
+                        'auth/weak-password': 'La contraseña debe tener al menos 6 caracteres',
+                        'auth/user-not-found': 'No existe una cuenta con este correo',
+                        'auth/wrong-password': 'Contraseña incorrecta',
+                        'auth/invalid-credential': 'Correo o contraseña incorrectos'
+                    };
+                    error = msgs[err.code] || 'Error: ' + err.message;
+                    render();
+                });
+            };
+            
+            window.loginGoogle = function() {
+                auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(function(err) {
+                    error = 'Error con Google: ' + err.message;
+                    render();
+                });
+            };
+            
+            window.logout = function() {
+                auth.signOut();
+            };
+            
+            window.tapDot = function(n) {
+                console.log('Tap:', n);
+                error = '';
+                if (selected.indexOf(n) === -1) {
+                    selected.push(n);
+                    render();
+                }
+            };
+            
+            window.clearDots = function() {
+                selected = [];
+                error = '';
+                render();
+            };
+            
+            window.confirmPattern = function() {
+                if (selected.length < 4) return;
+                
+                var pattern = selected.join('-');
+                console.log('Pattern:', pattern, 'Screen:', screen, 'Step:', step);
+                
+                if (screen === 'setup') {
+                    if (step === 1) {
+                        firstPattern = pattern;
+                        step = 2;
+                        selected = [];
+                        render();
+                    } else {
+                        if (pattern === firstPattern) {
+                            localStorage.setItem('pattern_' + userId, pattern);
+                            screen = 'main';
+                            render();
+                        } else {
+                            error = 'Los patrones no coinciden';
+                            step = 1;
+                            firstPattern = '';
+                            selected = [];
+                            render();
+                        }
+                    }
+                } else if (screen === 'unlock') {
+                    var saved = localStorage.getItem('pattern_' + userId);
+                    if (pattern === saved) {
+                        screen = 'main';
+                        render();
+                    } else {
+                        error = 'Patrón incorrecto';
+                        selected = [];
+                        render();
+                    }
+                }
+            };
+            
+            render();
+        }
+    </script>
+</body>
+</html>
