@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pensamiento Estratégico</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: system-ui, sans-serif; background: #0f172a; color: #f1f5f9; min-height: 100vh; overflow-x: hidden; }
+        .hidden { display: none !important; }
+        
+        /* Login */
+        .screen { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        .title { font-size: 1.5rem; color: #60a5fa; margin-bottom: 10px; }
+        .subtitle { color: #94a3b8; margin-bottom: 30px; text-align: center; }
+        .login-box { background: #1e293b; border-radius: 20px; padding: 30px; width: 100%; max-width: 350px; }
+        .login-title { font-size: 1.3rem; text-align: center; margin-bottom: 25px; }
+        .input { width: 100%; padding: 15px; border-radius: 12px; border: 2px solid #475569; background: #0f172a; color: #f1f5f9; font-size: 1rem; margin-bottom: 15px; }
+        .input:focus { outline: none; border-color: #60a5fa; }
+        .divider { display: flex; align-items: center; margin: 20px 0; color: #64748b; }
+        .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: #475569; }
+        .divider span { padding: 0 15px; }
+        .switch-text { text-align: center; margin-top: 20px; color: #94a3b8; }
+        .switch-link { color: #60a5fa; cursor: pointer; font-weight: 600; }
+        .error { background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #fca5a5; padding: 12px 20px; border-radius: 10px; margin-bottom: 20px; text-align: center; }
+        
+        /* Pattern */
+        .pattern-area { width: 280px; height: 280px; position: relative; touch-action: none; user-select: none; margin-bottom: 20px; }
+        .pattern-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        .pattern-dot { fill: #475569; transition: all 0.15s; cursor: pointer; }
+        .pattern-dot.selected { fill: #60a5fa; }
+        .pattern-dot-ring { fill: none; stroke: #475569; stroke-width: 3; transition: all 0.15s; }
+        .pattern-dot-ring.selected { stroke: #60a5fa; fill: rgba(96, 165, 250, 0.2); }
+        .pattern-line { stroke: #60a5fa; stroke-width: 4; stroke-linecap: round; }
+        .pattern-hint { color: #64748b; margin-bottom: 20px; font-size: 0.9rem; }
+        
+        /* Buttons */
+        .btn { padding: 15px 30px; border-radius: 12px; font-size: 1rem; font-weight: 600; border: none; cursor: pointer; margin: 5px; }
+        .btn-primary { background: #3b82f6; color: white; }
+        .btn-secondary { background: #334155; color: #f1f5f9; border: 2px solid #475569; }
+        .btn-success { background: #10b981; color: white; }
+        .btn-danger { background: #7f1d1d; color: #fecaca; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-sm { padding: 10px 16px; font-size: 0.85rem; }
+        .btn-block { width: 100%; }
+        .buttons { display: flex; gap: 10px; }
+        
+        /* Main App */
+        .app-container { min-height: 100vh; padding-bottom: 80px; }
+        .header { padding: 20px 16px; text-align: center; background: #1e293b; border-bottom: 1px solid #475569; position: sticky; top: 0; z-index: 100; }
+        .header-title { font-size: 1.2rem; color: #60a5fa; }
+        .main { padding: 16px; max-width: 500px; margin: 0 auto; }
+        
+        /* Cards */
+        .card { background: #1e293b; border: 1px solid #475569; border-radius: 16px; padding: 20px; margin-bottom: 16px; }
+        .card-accent { border-top: 3px solid #60a5fa; }
+        .card-success { border-top: 3px solid #10b981; background: linear-gradient(to bottom, #1e3a2f, #1e293b); }
+        .label { font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; margin-bottom: 10px; }
+        .textarea { min-height: 80px; resize: vertical; }
+        
+        /* Scenarios */
+        .scenario { background: #0f172a; border-radius: 12px; padding: 16px; margin-bottom: 12px; border-left: 4px solid #3b82f6; }
+        .scenario-title { font-weight: 600; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .scenario-consequences { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 8px; }
+        .consequence-card { min-width: 120px; background: #1e293b; border-radius: 8px; padding: 10px; font-size: 0.85rem; }
+        .consequence-card textarea { width: 100%; background: transparent; border: none; color: #f1f5f9; resize: none; min-height: 50px; }
+        
+        /* Bottom Nav */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; display: flex; justify-content: space-around; padding: 12px 16px; border-top: 1px solid #475569; z-index: 1000; }
+        .nav-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; background: none; border: none; color: #64748b; cursor: pointer; padding: 8px 16px; border-radius: 12px; }
+        .nav-btn.active { color: #60a5fa; background: rgba(96, 165, 250, 0.1); }
+        .nav-icon { font-size: 1.4rem; }
+        .nav-label { font-size: 0.7rem; font-weight: 600; }
+        
+        /* History */
+        .history-card { background: #1e293b; border: 1px solid #475569; border-radius: 12px; padding: 16px; margin-bottom: 12px; cursor: pointer; }
+        .history-card:hover { border-color: #60a5fa; }
+        .history-date { font-size: 0.75rem; color: #64748b; }
+        .history-problem { font-weight: 600; margin: 8px 0; }
+        .history-decision { color: #10b981; font-size: 0.9rem; }
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; margin-top: 8px; }
+        .badge-pending { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
+        .badge-done { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+        
+        /* Stats */
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+        .stat-card { background: #0f172a; border-radius: 12px; padding: 16px; text-align: center; }
+        .stat-number { font-size: 1.8rem; font-weight: 700; }
+        .stat-label { font-size: 0.7rem; color: #64748b; margin-top: 4px; }
+        
+        /* Profile */
+        .profile-header { text-align: center; margin-bottom: 20px; }
+        .profile-avatar { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6, #8b5cf6); display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 16px; }
+        .profile-name { font-size: 1.2rem; font-weight: 600; }
+        .profile-email { color: #64748b; font-size: 0.9rem; }
+        
+        /* Rating */
+        .rating-btns { display: flex; justify-content: center; gap: 8px; margin: 16px 0; }
+        .rating-btn { width: 50px; height: 50px; border-radius: 12px; border: 2px solid #475569; background: #0f172a; font-size: 1.3rem; cursor: pointer; }
+        .rating-btn.selected { border-color: #10b981; background: rgba(16, 185, 129, 0.2); }
+        
+        /* Toast */
+        .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #10b981; color: white; padding: 12px 24px; border-radius: 12px; font-weight: 600; z-index: 2000; }
+        
+        /* Empty */
+        .empty { text-align: center; padding: 40px 20px; color: #64748b; }
+        .empty-icon { font-size: 3rem; margin-bottom: 16px; opacity: 0.5; }
+        
+        .mb-8 { margin-bottom: 8px; }
+        .mb-16 { margin-bottom: 16px; }
+        .text-success { color: #10b981; }
+        .text-warning { color: #fbbf24; }
+    </style>
+</head>
+<body>
+    <div id="app"></div>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <script>
+        console.log('v12 - App completa con patron arrastrando');
+        
+        var checkFirebase = setInterval(function() {
+            if (typeof firebase !== 'undefined') {
+                clearInterval(checkFirebase);
+                startApp();
+            }
+        }, 100);
+        
+        function startApp() {
+            firebase.initializeApp({
+                apiKey: "AIzaSyD5ipPXMUN3shXChD97UTsacq8axpLAOJY",
+                authDomain: "pensamiento-e.firebaseapp.com",
+                projectId: "pensamiento-e",
+                storageBucket: "pensamiento-e.firebasestorage.app",
+                messagingSenderId: "683297780430",
+                appId: "1:683297780430:web:a780dde6b04ab2514a969f"
+            });
+            
+            var auth = firebase.auth();
+            var db = firebase.firestore();
+            
+            // Estado
+            var state = {
+                screen: 'loading',
+                user: null,
+                isRegister: false,
+                error: '',
+                pattern: [],
+                patternStep: 1,
+                firstPattern: '',
+                isDrawing: false,
+                activeTab: 'analysis',
+                decisions: [],
+                selectedDecision: null,
+                scenarios: [
+                    {id: 1, name: 'Mejor caso', color: '#10b981', consequences: ['','','','','']},
+                    {id: 2, name: 'Caso probable', color: '#3b82f6', consequences: ['','','','','']},
+                    {id: 3, name: 'Peor caso', color: '#ef4444', consequences: ['','','','','']}
+                ],
+                problem: '',
+                finalDecision: '',
+                reasoning: '',
+                outcomeRating: 3
+            };
+            
+            // Posiciones de puntos del patrón
+            var dotPositions = [
+                {x: 46, y: 46}, {x: 140, y: 46}, {x: 234, y: 46},
+                {x: 46, y: 140}, {x: 140, y: 140}, {x: 234, y: 140},
+                {x: 46, y: 234}, {x: 140, y: 234}, {x: 234, y: 234}
+            ];
+            
+            auth.onAuthStateChanged(function(user) {
+                state.user = user;
+                if (user) {
+                    var saved = localStorage.getItem('pattern_' + user.uid);
+                    state.screen = saved ? 'unlock' : 'setup';
+                    loadDecisions();
+                } else {
+                    state.screen = 'login';
+                }
+                render();
+            });
+            
+            function loadDecisions() {
+                if (!state.user) return;
+                db.collection('users').doc(state.user.uid).collection('decisions')
+                    .orderBy('createdAt', 'desc')
+                    .onSnapshot(function(snap) {
+                        state.decisions = snap.docs.map(function(doc) {
+                            var d = doc.data();
+                            return {
+                                id: doc.id,
+                                problem: d.problem,
+                                finalDecision: d.finalDecision,
+                                reasoning: d.reasoning,
+                                scenarios: d.scenarios,
+                                outcome: d.outcome,
+                                outcomeRating: d.outcomeRating,
+                                createdAt: d.createdAt ? d.createdAt.toDate() : new Date()
+                            };
+                        });
+                        render();
+                    });
+            }
+            
+            function render() {
+                var app = document.getElementById('app');
+                var html = '';
+                
+                switch(state.screen) {
+                    case 'loading':
+                        html = '<div class="screen"><p>Cargando...</p></div>';
+                        break;
+                    case 'login':
+                        html = renderLogin();
+                        break;
+                    case 'setup':
+                    case 'unlock':
+                        html = renderPattern();
+                        break;
+                    case 'main':
+                        html = renderMain();
+                        break;
+                }
+                
+                app.innerHTML = html;
+                
+                if (state.screen === 'setup' || state.screen === 'unlock') {
+                    setupPatternEvents();
+                }
+            }
+            
+            function renderLogin() {
+                var title = state.isRegister ? 'Crear Cuenta' : 'Iniciar Sesión';
+                var btn = state.isRegister ? 'Crear Cuenta' : 'Entrar';
+                var switchQ = state.isRegister ? '¿Ya tienes cuenta?' : '¿No tienes cuenta?';
+                var switchA = state.isRegister ? 'Inicia sesión' : 'Regístrate';
+                
+                return '<div class="screen">' +
+                    '<div class="title">♞ Pensamiento Estratégico</div>' +
+                    '<div class="subtitle">Analiza tus decisiones estratégicamente</div>' +
+                    '<div class="login-box">' +
+                    '<div class="login-title">' + title + '</div>' +
+                    (state.error ? '<div class="error">' + state.error + '</div>' : '') +
+                    '<input type="email" id="email" class="input" placeholder="Correo electrónico">' +
+                    '<input type="password" id="pass" class="input" placeholder="Contraseña">' +
+                    '<button class="btn btn-primary btn-block" onclick="doLogin()">' + btn + '</button>' +
+                    '<div class="divider"><span>o</span></div>' +
+                    '<button class="btn btn-secondary btn-block" onclick="doGoogle()">🔵 Continuar con Google</button>' +
+                    '<div class="switch-text">' + switchQ + ' <span class="switch-link" onclick="toggleRegister()">' + switchA + '</span></div>' +
+                    '</div></div>';
+            }
+            
+            function renderPattern() {
+                var title = state.screen === 'setup' ? 
+                    (state.patternStep === 1 ? 'Crea tu patrón' : 'Confirma tu patrón') : 
+                    'Ingresa tu patrón';
+                var hint = state.screen === 'setup' && state.patternStep === 1 ? 
+                    'Arrastra para conectar al menos 4 puntos' : 
+                    'Dibuja tu patrón';
+                
+                var lines = '';
+                for (var i = 0; i < state.pattern.length - 1; i++) {
+                    var p1 = dotPositions[state.pattern[i] - 1];
+                    var p2 = dotPositions[state.pattern[i + 1] - 1];
+                    lines += '<line class="pattern-line" x1="'+p1.x+'" y1="'+p1.y+'" x2="'+p2.x+'" y2="'+p2.y+'"/>';
+                }
+                
+                var dots = '';
+                for (var i = 0; i < 9; i++) {
+                    var isSelected = state.pattern.indexOf(i + 1) !== -1;
+                    var p = dotPositions[i];
+                    dots += '<circle class="pattern-dot-ring ' + (isSelected ? 'selected' : '') + '" cx="'+p.x+'" cy="'+p.y+'" r="28" data-dot="'+(i+1)+'"/>';
+                    dots += '<circle class="pattern-dot ' + (isSelected ? 'selected' : '') + '" cx="'+p.x+'" cy="'+p.y+'" r="12" data-dot="'+(i+1)+'"/>';
+                }
+                
+                return '<div class="screen">' +
+                    '<div class="title">♞ Pensamiento Estratégico</div>' +
+                    '<div class="subtitle">' + title + '</div>' +
+                    (state.error ? '<div class="error">' + state.error + '</div>' : '') +
+                    '<div class="pattern-area" id="patternArea">' +
+                    '<svg class="pattern-svg" viewBox="0 0 280 280">' +
+                    lines + dots +
+                    '</svg></div>' +
+                    '<div class="pattern-hint">' + hint + ' (' + state.pattern.length + '/4)</div>' +
+                    '<div class="buttons">' +
+                    '<button class="btn btn-secondary btn-sm" onclick="clearPattern()">Reiniciar</button>' +
+                    '</div></div>';
+            }
+            
+            function setupPatternEvents() {
+                var area = document.getElementById('patternArea');
+                if (!area) return;
+                
+                function getPos(e) {
+                    var rect = area.getBoundingClientRect();
+                    var x, y;
+                    if (e.touches) {
+                        x = e.touches[0].clientX - rect.left;
+                        y = e.touches[0].clientY - rect.top;
+                    } else {
+                        x = e.clientX - rect.left;
+                        y = e.clientY - rect.top;
+                    }
+                    // Escalar al viewBox
+                    x = x * 280 / rect.width;
+                    y = y * 280 / rect.height;
+                    return {x: x, y: y};
+                }
+                
+                function checkDot(pos) {
+                    for (var i = 0; i < 9; i++) {
+                        var dp = dotPositions[i];
+                        var dist = Math.sqrt(Math.pow(pos.x - dp.x, 2) + Math.pow(pos.y - dp.y, 2));
+                        if (dist < 35) {
+                            return i + 1;
+                        }
+                    }
+                    return null;
+                }
+                
+                function handleStart(e) {
+                    e.preventDefault();
+                    state.isDrawing = true;
+                    state.pattern = [];
+                    var pos = getPos(e);
+                    var dot = checkDot(pos);
+                    if (dot) {
+                        state.pattern.push(dot);
+                        render();
+                        setupPatternEvents();
+                    }
+                }
+                
+                function handleMove(e) {
+                    if (!state.isDrawing) return;
+                    e.preventDefault();
+                    var pos = getPos(e);
+                    var dot = checkDot(pos);
+                    if (dot && state.pattern.indexOf(dot) === -1) {
+                        state.pattern.push(dot);
+                        render();
+                        setupPatternEvents();
+                    }
+                }
+                
+                function handleEnd(e) {
+                    if (!state.isDrawing) return;
+                    state.isDrawing = false;
+                    if (state.pattern.length >= 4) {
+                        checkPattern();
+                    } else if (state.pattern.length > 0) {
+                        state.error = 'Conecta al menos 4 puntos';
+                        state.pattern = [];
+                        render();
+                    }
+                }
+                
+                area.addEventListener('mousedown', handleStart);
+                area.addEventListener('mousemove', handleMove);
+                area.addEventListener('mouseup', handleEnd);
+                area.addEventListener('mouseleave', handleEnd);
+                area.addEventListener('touchstart', handleStart, {passive: false});
+                area.addEventListener('touchmove', handleMove, {passive: false});
+                area.addEventListener('touchend', handleEnd);
+            }
+            
+            function checkPattern() {
+                var pattern = state.pattern.join('-');
+                
+                if (state.screen === 'setup') {
+                    if (state.patternStep === 1) {
+                        state.firstPattern = pattern;
+                        state.patternStep = 2;
+                        state.pattern = [];
+                        state.error = '';
+                        render();
+                    } else {
+                        if (pattern === state.firstPattern) {
+                            localStorage.setItem('pattern_' + state.user.uid, pattern);
+                            state.screen = 'main';
+                            render();
+                        } else {
+                            state.error = 'Los patrones no coinciden';
+                            state.patternStep = 1;
+                            state.firstPattern = '';
+                            state.pattern = [];
+                            render();
+                        }
+                    }
+                } else {
+                    var saved = localStorage.getItem('pattern_' + state.user.uid);
+                    if (pattern === saved) {
+                        state.screen = 'main';
+                        render();
+                    } else {
+                        state.error = 'Patrón incorrecto';
+                        state.pattern = [];
+                        render();
+                    }
+                }
+            }
+            
+            function renderMain() {
+                var content = '';
+                if (state.activeTab === 'analysis') content = renderAnalysis();
+                else if (state.activeTab === 'history') content = renderHistory();
+                else if (state.activeTab === 'profile') content = renderProfile();
+                
+                var pending = state.decisions.filter(function(d) { return !d.outcome; }).length;
+                
+                return '<div class="app-container">' +
+                    '<header class="header"><div class="header-title">♞ Pensamiento Estratégico</div></header>' +
+                    '<main class="main">' + content + '</main>' +
+                    '<nav class="bottom-nav">' +
+                    '<button class="nav-btn ' + (state.activeTab === 'analysis' ? 'active' : '') + '" onclick="setTab(\'analysis\')"><span class="nav-icon">🎯</span><span class="nav-label">Análisis</span></button>' +
+                    '<button class="nav-btn ' + (state.activeTab === 'history' ? 'active' : '') + '" onclick="setTab(\'history\')"><span class="nav-icon">📚</span><span class="nav-label">Historial</span>' + (pending > 0 ? '<span class="badge badge-pending" style="position:absolute;top:-5px;right:-5px;font-size:0.6rem">' + pending + '</span>' : '') + '</button>' +
+                    '<button class="nav-btn ' + (state.activeTab === 'profile' ? 'active' : '') + '" onclick="setTab(\'profile\')"><span class="nav-icon">👤</span><span class="nav-label">Perfil</span></button>' +
+                    '</nav></div>';
+            }
+            
+            function renderAnalysis() {
+                if (state.selectedDecision) return renderDecisionDetail();
+                
+                var scenariosHtml = state.scenarios.map(function(s, si) {
+                    var consHtml = s.consequences.map(function(c, ci) {
+                        return '<div class="consequence-card"><small style="color:#64748b">Paso '+(ci+1)+'</small><textarea placeholder="¿Qué pasa?" onchange="updateCons('+si+','+ci+',this.value)">'+c+'</textarea></div>';
+                    }).join('');
+                    return '<div class="scenario" style="border-left-color:'+s.color+'">' +
+                        '<div class="scenario-title"><span style="color:'+s.color+'">'+s.name+'</span></div>' +
+                        '<div class="scenario-consequences">' + consHtml + '</div></div>';
+                }).join('');
+                
+                return '<div class="card card-accent">' +
+                    '<div class="label">❓ Problema o Decisión</div>' +
+                    '<input class="input" placeholder="¿Qué necesitas decidir?" value="'+state.problem+'" onchange="state.problem=this.value">' +
+                    '</div>' +
+                    scenariosHtml +
+                    '<div class="card card-success">' +
+                    '<div class="label">✓ Decisión Final</div>' +
+                    '<input class="input mb-8" placeholder="Decidí que..." value="'+state.finalDecision+'" onchange="state.finalDecision=this.value">' +
+                    '<textarea class="input textarea mb-16" placeholder="¿Por qué tomé esta decisión?" onchange="state.reasoning=this.value">'+state.reasoning+'</textarea>' +
+                    '<button class="btn btn-success btn-block" onclick="saveDecision()">💾 Guardar Decisión</button>' +
+                    '</div>';
+            }
+            
+            function renderHistory() {
+                if (state.selectedDecision) return renderDecisionDetail();
+                
+                var pending = state.decisions.filter(function(d) { return !d.outcome; });
+                var done = state.decisions.filter(function(d) { return d.outcome; });
+                
+                if (state.decisions.length === 0) {
+                    return '<div class="empty"><div class="empty-icon">📭</div><p>No hay decisiones guardadas</p></div>';
+                }
+                
+                var html = '<div class="stats-grid">' +
+                    '<div class="stat-card"><div class="stat-number">' + state.decisions.length + '</div><div class="stat-label">Total</div></div>' +
+                    '<div class="stat-card"><div class="stat-number text-warning">' + pending.length + '</div><div class="stat-label">Pendientes</div></div>' +
+                    '<div class="stat-card"><div class="stat-number text-success">' + done.length + '</div><div class="stat-label">Completadas</div></div>' +
+                    '</div>';
+                
+                html += state.decisions.map(function(d) {
+                    var badge = d.outcome ? 
+                        '<span class="badge badge-done">✓ Completada</span>' : 
+                        '<span class="badge badge-pending">⏳ Pendiente</span>';
+                    return '<div class="history-card" onclick="viewDecision(\''+d.id+'\')">' +
+                        '<div class="history-date">' + formatDate(d.createdAt) + '</div>' +
+                        '<div class="history-problem">' + d.problem + '</div>' +
+                        '<div class="history-decision">→ ' + d.finalDecision + '</div>' +
+                        badge + '</div>';
+                }).join('');
+                
+                return html;
+            }
+            
+            function renderDecisionDetail() {
+                var d = state.selectedDecision;
+                
+                var scenariosHtml = d.scenarios ? d.scenarios.map(function(s) {
+                    var cons = s.consequences.filter(function(c) { return c; }).join(' → ') || 'Sin detalles';
+                    return '<div style="background:#0f172a;padding:12px;border-radius:8px;margin-bottom:8px;border-left:3px solid '+s.color+'">' +
+                        '<div style="color:'+s.color+';font-weight:600;margin-bottom:4px">'+s.name+'</div>' +
+                        '<div style="color:#94a3b8;font-size:0.85rem">'+cons+'</div></div>';
+                }).join('') : '';
+                
+                var outcomeHtml = '';
+                if (d.outcome) {
+                    outcomeHtml = '<div class="card card-success"><div class="label">Resultado</div>' +
+                        '<div style="font-size:1.5rem;margin-bottom:8px">' + ['😞','😕','😐','🙂','😄'][d.outcomeRating-1] + '</div>' +
+                        '<p>' + d.outcome + '</p></div>';
+                } else {
+                    var ratingBtns = [1,2,3,4,5].map(function(r) {
+                        return '<button class="rating-btn ' + (state.outcomeRating === r ? 'selected' : '') + '" onclick="state.outcomeRating='+r+';render()">' + ['😞','😕','😐','🙂','😄'][r-1] + '</button>';
+                    }).join('');
+                    outcomeHtml = '<div class="card card-success"><div class="label">📝 Registrar Resultado</div>' +
+                        '<div class="rating-btns">' + ratingBtns + '</div>' +
+                        '<textarea id="outcomeText" class="input textarea mb-8" placeholder="¿Cómo resultó?"></textarea>' +
+                        '<button class="btn btn-success btn-block" onclick="saveOutcome()">Guardar Resultado</button></div>';
+                }
+                
+                return '<button class="btn btn-secondary btn-sm mb-16" onclick="state.selectedDecision=null;render()">← Volver</button>' +
+                    '<div class="card card-accent">' +
+                    '<div class="label">Problema</div><p style="font-size:1.1rem;margin-bottom:16px">' + d.problem + '</p>' +
+                    '<div class="label">Decisión</div><p style="color:#10b981;font-weight:600;margin-bottom:16px">→ ' + d.finalDecision + '</p>' +
+                    (d.reasoning ? '<div class="label">Razonamiento</div><p style="color:#94a3b8;margin-bottom:16px">' + d.reasoning + '</p>' : '') +
+                    '<div class="label">Escenarios</div>' + scenariosHtml +
+                    '</div>' + outcomeHtml;
+            }
+            
+            function renderProfile() {
+                var done = state.decisions.filter(function(d) { return d.outcome; });
+                var avg = done.length > 0 ? (done.reduce(function(s,d) { return s + d.outcomeRating; }, 0) / done.length).toFixed(1) : '-';
+                
+                return '<div class="card card-accent">' +
+                    '<div class="profile-header">' +
+                    '<div class="profile-avatar">👤</div>' +
+                    '<div class="profile-name">' + (state.user.displayName || 'Usuario') + '</div>' +
+                    '<div class="profile-email">' + state.user.email + '</div>' +
+                    '</div></div>' +
+                    '<div class="card"><div class="label">📊 Estadísticas</div>' +
+                    '<div class="stats-grid">' +
+                    '<div class="stat-card"><div class="stat-number">' + state.decisions.length + '</div><div class="stat-label">Total</div></div>' +
+                    '<div class="stat-card"><div class="stat-number">' + done.length + '</div><div class="stat-label">Completadas</div></div>' +
+                    '<div class="stat-card"><div class="stat-number">' + avg + '</div><div class="stat-label">Promedio</div></div>' +
+                    '</div></div>' +
+                    '<div class="card"><div class="label">🔒 Seguridad</div>' +
+                    '<button class="btn btn-secondary btn-block mb-8" onclick="changePattern()">Cambiar Patrón</button>' +
+                    '</div>' +
+                    '<div class="card"><button class="btn btn-danger btn-block" onclick="doLogout()">Cerrar Sesión</button></div>';
+            }
+            
+            // Funciones globales
+            window.toggleRegister = function() { state.isRegister = !state.isRegister; state.error = ''; render(); };
+            window.doLogin = function() {
+                var email = document.getElementById('email').value;
+                var pass = document.getElementById('pass').value;
+                if (!email || !pass) { state.error = 'Completa todos los campos'; render(); return; }
+                var p = state.isRegister ? auth.createUserWithEmailAndPassword(email, pass) : auth.signInWithEmailAndPassword(email, pass);
+                p.catch(function(e) {
+                    var msgs = {'auth/email-already-in-use':'Correo ya registrado','auth/invalid-email':'Correo inválido','auth/weak-password':'Mínimo 6 caracteres','auth/user-not-found':'No existe esta cuenta','auth/wrong-password':'Contraseña incorrecta','auth/invalid-credential':'Datos incorrectos'};
+                    state.error = msgs[e.code] || e.message; render();
+                });
+            };
+            window.doGoogle = function() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); };
+            window.doLogout = function() { if(confirm('¿Cerrar sesión?')) auth.signOut(); };
+            window.clearPattern = function() { state.pattern = []; state.error = ''; render(); };
+            window.setTab = function(t) { state.activeTab = t; state.selectedDecision = null; render(); };
+            window.updateCons = function(si, ci, val) { state.scenarios[si].consequences[ci] = val; };
+            window.saveDecision = function() {
+                if (!state.problem || !state.finalDecision) { alert('Completa el problema y la decisión'); return; }
+                db.collection('users').doc(state.user.uid).collection('decisions').add({
+                    problem: state.problem, finalDecision: state.finalDecision, reasoning: state.reasoning,
+                    scenarios: state.scenarios, outcome: null, outcomeRating: null,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                }).then(function() {
+                    showToast('✅ Guardado');
+                    state.problem = ''; state.finalDecision = ''; state.reasoning = '';
+                    state.scenarios = [{id:1,name:'Mejor caso',color:'#10b981',consequences:['','','','','']},{id:2,name:'Caso probable',color:'#3b82f6',consequences:['','','','','']},{id:3,name:'Peor caso',color:'#ef4444',consequences:['','','','','']}];
+                    state.activeTab = 'history'; render();
+                });
+            };
+            window.viewDecision = function(id) { state.selectedDecision = state.decisions.find(function(d){return d.id===id;}); render(); };
+            window.saveOutcome = function() {
+                var text = document.getElementById('outcomeText').value;
+                if (!text) return;
+                db.collection('users').doc(state.user.uid).collection('decisions').doc(state.selectedDecision.id).update({
+                    outcome: text, outcomeRating: state.outcomeRating
+                }).then(function() { showToast('✅ Guardado'); state.selectedDecision = null; render(); });
+            };
+            window.changePattern = function() { state.patternStep = 1; state.firstPattern = ''; state.pattern = []; state.screen = 'setup'; render(); };
+            
+            function formatDate(d) { return d.toLocaleDateString('es-ES', {year:'numeric',month:'short',day:'numeric'}); }
+            function showToast(msg) {
+                var t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
+                document.body.appendChild(t); setTimeout(function() { t.remove(); }, 2500);
+            }
+            
+            render();
+        }
+    </script>
+</body>
+</html>
