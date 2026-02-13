@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pensamiento Estratégico</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta name="theme-color" content="#0f172a">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        :root {
+            --bg-primary: #0f172a; --bg-secondary: #1e293b; --bg-card: #334155;
+            --border-color: #475569; --text-primary: #f1f5f9; --text-secondary: #94a3b8;
+            --text-muted: #64748b; --accent-blue: #60a5fa; --accent-purple: #a78bfa;
+            --success: #10b981; --warning: #fbbf24; --danger: #ef4444;
+        }
+        body { font-family: system-ui, sans-serif; background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; }
+        .hidden { display: none !important; }
+        .loading { display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; gap: 20px; }
+        .spinner { width: 40px; height: 40px; border: 3px solid var(--border-color); border-top-color: var(--accent-blue); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .header { padding: 20px 16px; text-align: center; background: rgba(15, 23, 42, 0.95); border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 100; }
+        .header-title { font-size: 1.3rem; background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-secondary); display: flex; justify-content: space-around; padding: 12px 16px 20px; border-top: 1px solid var(--border-color); z-index: 1000; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 16px; border-radius: 12px; border: none; background: transparent; color: var(--text-muted); cursor: pointer; }
+        .nav-item.active { color: var(--accent-blue); background: rgba(96, 165, 250, 0.1); }
+        .nav-icon { font-size: 1.5rem; }
+        .nav-label { font-size: 0.7rem; font-weight: 600; }
+        .nav-badge { position: absolute; top: -5px; right: -5px; background: var(--warning); color: var(--bg-primary); font-size: 0.6rem; padding: 2px 6px; border-radius: 10px; }
+        
+        .main-content { padding: 16px; padding-bottom: 100px; max-width: 600px; margin: 0 auto; }
+        .card { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; margin-bottom: 16px; }
+        .card-accent { border-top: 3px solid var(--accent-blue); }
+        .card-success { border-top: 3px solid var(--success); background: linear-gradient(145deg, #1e3a2f, #0f2922); }
+        
+        .label { font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+        .input { width: 100%; background: var(--bg-primary); border: 2px solid var(--border-color); border-radius: 12px; padding: 14px; font-size: 1rem; color: var(--text-primary); font-family: inherit; }
+        .input:focus { outline: none; border-color: var(--accent-blue); }
+        .textarea { min-height: 80px; resize: vertical; }
+        
+        .btn { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 24px; border-radius: 12px; font-size: 0.9rem; font-weight: 600; border: none; cursor: pointer; width: 100%; }
+        .btn-primary { background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-secondary { background: var(--bg-card); color: var(--text-primary); border: 2px solid var(--border-color); }
+        .btn-danger { background: #7f1d1d; color: #fecaca; }
+        .btn-sm { padding: 10px 16px; font-size: 0.8rem; width: auto; }
+        .btn-group { display: flex; gap: 8px; margin-bottom: 16px; }
+        
+        .scenario { background: var(--bg-primary); border-radius: 12px; padding: 16px; margin-bottom: 16px; border: 1px solid var(--border-color); }
+        .scenario-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .scenario-dot { width: 14px; height: 14px; border-radius: 50%; }
+        .scenario-label { flex: 1; background: transparent; border: none; font-size: 0.95rem; font-weight: 600; color: var(--text-primary); }
+        .scenario-remove { width: 32px; height: 32px; border-radius: 8px; border: none; background: #7f1d1d; color: #fecaca; cursor: pointer; }
+        
+        .consequences-scroll { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; }
+        .consequence-card { min-width: 140px; background: var(--bg-secondary); border-radius: 10px; padding: 12px; border: 1px solid var(--border-color); flex-shrink: 0; }
+        .consequence-num { font-size: 0.65rem; color: var(--text-muted); margin-bottom: 8px; }
+        .consequence-input { width: 100%; min-height: 50px; background: transparent; border: none; color: var(--text-primary); font-family: inherit; font-size: 0.85rem; resize: none; }
+        
+        .history-card { background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: 14px; padding: 16px; margin-bottom: 12px; cursor: pointer; }
+        .history-card.pending { border-left: 4px solid var(--warning); }
+        .history-card.completed { border-left: 4px solid var(--success); }
+        .history-date { font-size: 0.7rem; color: var(--text-muted); }
+        .history-problem { font-size: 1rem; font-weight: 600; margin: 8px 0; }
+        .history-decision { font-size: 0.9rem; color: var(--success); }
+        .badge { display: inline-block; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-top: 10px; }
+        .badge-pending { background: rgba(251, 191, 36, 0.15); color: var(--warning); }
+        .badge-success { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+        .stat-card { background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px; text-align: center; }
+        .stat-number { font-size: 1.5rem; font-weight: 700; }
+        .stat-label { font-size: 0.65rem; color: var(--text-muted); }
+        
+        .filter-tabs { display: flex; gap: 8px; margin-bottom: 16px; overflow-x: auto; }
+        .filter-tab { padding: 10px 16px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; border: 2px solid var(--border-color); background: transparent; color: var(--text-secondary); cursor: pointer; white-space: nowrap; }
+        .filter-tab.active { background: var(--bg-card); color: var(--text-primary); border-color: var(--accent-blue); }
+        
+        .pattern-container { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        .pattern-title { font-size: 1.5rem; background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px; }
+        .pattern-subtitle { color: var(--text-secondary); margin-bottom: 40px; text-align: center; }
+        .pattern-grid { display: grid; grid-template-columns: repeat(3, 70px); gap: 25px; margin-bottom: 30px; }
+        .pattern-dot { 
+            width: 70px; height: 70px; border-radius: 50%; 
+            background: rgba(71, 85, 105, 0.3); border: 3px solid var(--border-color); 
+            display: flex; align-items: center; justify-content: center; 
+            cursor: pointer; transition: all 0.15s;
+            -webkit-user-select: none; user-select: none;
+        }
+        .pattern-dot:hover { background: rgba(96, 165, 250, 0.2); }
+        .pattern-dot:active { transform: scale(0.95); }
+        .pattern-dot.selected { background: rgba(96, 165, 250, 0.4); border-color: var(--accent-blue); }
+        .pattern-dot-inner { 
+            width: 20px; height: 20px; border-radius: 50%; 
+            background: var(--text-muted); transition: all 0.15s;
+            pointer-events: none;
+        }
+        .pattern-dot.selected .pattern-dot-inner { width: 30px; height: 30px; background: var(--accent-blue); }
+        .pattern-error { background: rgba(239, 68, 68, 0.15); border: 1px solid var(--danger); color: #fecaca; padding: 12px 20px; border-radius: 10px; margin-bottom: 20px; text-align: center; }
+        .pattern-hint { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 20px; }
+        .pattern-selected { color: var(--accent-blue); font-size: 0.9rem; margin-bottom: 20px; font-weight: 600; }
+        
+        .login-container { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; padding: 24px; }
+        .login-logo { text-align: center; margin-bottom: 40px; }
+        .login-logo-icon { font-size: 4rem; margin-bottom: 16px; }
+        .login-logo-text { font-size: 1.5rem; background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .login-card { background: var(--bg-secondary); border-radius: 20px; padding: 28px; border: 1px solid var(--border-color); }
+        .login-title { font-size: 1.3rem; font-weight: 600; text-align: center; margin-bottom: 24px; }
+        .login-error { background: rgba(239, 68, 68, 0.15); border: 1px solid var(--danger); color: #fecaca; padding: 12px; border-radius: 10px; margin-bottom: 16px; text-align: center; }
+        .login-divider { display: flex; align-items: center; gap: 16px; margin: 20px 0; color: var(--text-muted); }
+        .login-divider::before, .login-divider::after { content: ''; flex: 1; height: 1px; background: var(--border-color); }
+        .login-switch { text-align: center; margin-top: 20px; color: var(--text-secondary); }
+        .login-switch-link { color: var(--accent-blue); cursor: pointer; font-weight: 600; }
+        
+        .rating-selector { display: flex; gap: 8px; justify-content: center; margin: 16px 0; }
+        .rating-btn { width: 52px; height: 52px; border-radius: 14px; border: 2px solid var(--border-color); background: var(--bg-primary); font-size: 1.5rem; cursor: pointer; }
+        .rating-btn.selected { border-color: var(--success); background: rgba(16, 185, 129, 0.2); transform: scale(1.1); }
+        
+        .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--success); color: white; padding: 14px 24px; border-radius: 12px; font-weight: 600; z-index: 2000; }
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+        .empty-icon { font-size: 4rem; margin-bottom: 16px; opacity: 0.5; }
+        
+        .mb-12 { margin-bottom: 12px; }
+        .mb-16 { margin-bottom: 16px; }
+        .mb-20 { margin-bottom: 20px; }
+        .text-success { color: var(--success); }
+        .text-warning { color: var(--warning); }
+    </style>
+</head>
+<body>
+    <div id="app"><div class="loading"><div class="spinner"></div><p>Cargando...</p></div></div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <script>
+    (function() {
+        console.log('🚀 Pensamiento Estratégico v6 - Pattern Fix');
+        
+        function waitForFirebase(callback, attempts) {
+            if (typeof firebase !== 'undefined') { callback(); }
+            else if (attempts > 0) { setTimeout(function() { waitForFirebase(callback, attempts - 1); }, 200); }
+            else { document.getElementById('app').innerHTML = '<div class="loading"><p>⚠️ Error de conexión. <button onclick="location.reload()" class="btn btn-primary" style="margin-top:20px">Recargar</button></p></div>'; }
+        }
+        
+        waitForFirebase(initApp, 25);
+        
+        function initApp() {
+            console.log('✅ Firebase cargado');
+            
+            firebase.initializeApp({
+                apiKey: "AIzaSyD5ipPXMUN3shXChD97UTsacq8axpLAOJY",
+                authDomain: "pensamiento-e.firebaseapp.com",
+                projectId: "pensamiento-e",
+                storageBucket: "pensamiento-e.firebasestorage.app",
+                messagingSenderId: "683297780430",
+                appId: "1:683297780430:web:a780dde6b04ab2514a969f"
+            });
+            
+            var auth = firebase.auth();
+            var db = firebase.firestore();
+            
+            var currentUser = null;
+            var currentScreen = 'loading';
+            var decisions = [];
+            var selectedDecision = null;
+            var historyFilter = 'all';
+            var scenarios = [
+                { id: 1, label: 'Mejor escenario', color: '#10b981', consequences: ['','','','','','','','','',''] },
+                { id: 2, label: 'Escenario probable', color: '#3b82f6', consequences: ['','','','','','','','','',''] },
+                { id: 3, label: 'Peor escenario', color: '#ef4444', consequences: ['','','','','','','','','',''] }
+            ];
+            var analysisData = { problem: '', finalDecision: '', reasoning: '', expectedDate: '' };
+            var patternStep = 1;
+            var confirmPattern = null;
+            var selectedPattern = [];
+            var outcomeRating = 3;
+            var isRegisterMode = false;
+            var activeTab = 'analysis';
+            
+            auth.onAuthStateChanged(function(user) {
+                currentUser = user;
+                if (user) {
+                    var saved = localStorage.getItem('pattern_' + user.uid);
+                    currentScreen = saved ? 'pattern-unlock' : 'pattern-setup';
+                    loadDecisions();
+                } else {
+                    currentScreen = 'login';
+                }
+                render();
+            });
+            
+            function loadDecisions() {
+                if (!currentUser) return;
+                db.collection('users').doc(currentUser.uid).collection('decisions').orderBy('createdAt', 'desc').onSnapshot(function(snapshot) {
+                    decisions = snapshot.docs.map(function(doc) {
+                        var data = doc.data();
+                        return { id: doc.id, problem: data.problem, scenarios: data.scenarios, finalDecision: data.finalDecision, reasoning: data.reasoning, expectedDate: data.expectedDate, outcome: data.outcome, outcomeRating: data.outcomeRating, createdAt: data.createdAt ? data.createdAt.toDate() : new Date() };
+                    });
+                    render();
+                });
+            }
+            
+            function render() {
+                var app = document.getElementById('app');
+                if (currentScreen === 'loading') { app.innerHTML = '<div class="loading"><div class="spinner"></div></div>'; }
+                else if (currentScreen === 'login') { app.innerHTML = renderLogin(); }
+                else if (currentScreen === 'pattern-setup' || currentScreen === 'pattern-unlock') { app.innerHTML = renderPattern(); }
+                else if (currentScreen === 'main') { app.innerHTML = renderMain(); }
+            }
+            
+            function renderLogin() {
+                return '<div class="login-container"><div class="login-logo"><div class="login-logo-icon">♞</div><div class="login-logo-text">Pensamiento Estratégico</div></div><div class="login-card"><h2 class="login-title" id="loginTitle">Iniciar Sesión</h2><div id="loginError" class="login-error hidden"></div><form id="loginForm"><input type="email" id="email" class="input mb-16" placeholder="Correo electrónico" required><input type="password" id="password" class="input mb-20" placeholder="Contraseña" required minlength="6"><button type="submit" class="btn btn-primary" id="loginBtn">Entrar</button></form><div class="login-divider">o</div><button id="googleBtn" class="btn btn-secondary">🔵 Continuar con Google</button><div class="login-switch"><span id="switchText">¿No tienes cuenta?</span> <span class="login-switch-link" id="switchLink">Regístrate</span></div></div></div>';
+            }
+            
+            function renderPattern() {
+                var isSetup = currentScreen === 'pattern-setup';
+                var subtitle = isSetup ? (patternStep === 1 ? 'Crea tu patrón de seguridad<br><small>Toca los puntos para conectarlos</small>' : 'Confirma tu patrón<br><small>Dibuja el mismo patrón otra vez</small>') : 'Dibuja tu patrón para entrar';
+                var dots = '';
+                for (var n = 1; n <= 9; n++) {
+                    var isSelected = selectedPattern.indexOf(n) >= 0;
+                    dots += '<div class="pattern-dot' + (isSelected ? ' selected' : '') + '" id="dot' + n + '"><div class="pattern-dot-inner"></div></div>';
+                }
+                var selectedText = selectedPattern.length > 0 ? 'Puntos: ' + selectedPattern.join(' → ') : '';
+                return '<div class="pattern-container"><div class="login-logo-icon" style="font-size:3rem;margin-bottom:16px">♞</div><div class="pattern-title">Pensamiento Estratégico</div><div class="pattern-subtitle">' + subtitle + '</div><div id="patternError" class="pattern-error hidden"></div><div class="pattern-grid" id="patternGrid">' + dots + '</div>' + (selectedText ? '<div class="pattern-selected">' + selectedText + '</div>' : '<div class="pattern-hint">Conecta al menos 4 puntos</div>') + '<div style="display:flex;gap:10px"><button class="btn btn-secondary btn-sm" id="clearPatternBtn">Reiniciar</button>' + (selectedPattern.length >= 4 ? '<button class="btn btn-primary btn-sm" id="confirmPatternBtn">Confirmar</button>' : '') + '</div></div>';
+            }
+            
+            function renderMain() {
+                var pendingCount = decisions.filter(function(d) { return !d.outcome; }).length;
+                var content = '';
+                if (activeTab === 'analysis') content = renderAnalysis();
+                else if (activeTab === 'history') content = renderHistory();
+                else if (activeTab === 'profile') content = renderProfile();
+                return '<header class="header"><h1 class="header-title">♞ Pensamiento Estratégico</h1></header><main class="main-content">' + content + '</main><nav class="bottom-nav"><button class="nav-item' + (activeTab === 'analysis' ? ' active' : '') + '" data-tab="analysis"><span class="nav-icon">🎯</span><span class="nav-label">Análisis</span></button><button class="nav-item' + (activeTab === 'history' ? ' active' : '') + '" data-tab="history" style="position:relative"><span class="nav-icon">📚</span><span class="nav-label">Historial</span>' + (pendingCount > 0 ? '<span class="nav-badge">' + pendingCount + '</span>' : '') + '</button><button class="nav-item' + (activeTab === 'profile' ? ' active' : '') + '" data-tab="profile"><span class="nav-icon">👤</span><span class="nav-label">Perfil</span></button></nav>';
+            }
+            
+            function renderAnalysis() {
+                var scenariosHtml = '';
+                for (var si = 0; si < scenarios.length; si++) {
+                    var s = scenarios[si];
+                    var conseqHtml = '';
+                    for (var ci = 0; ci < s.consequences.length; ci++) {
+                        conseqHtml += '<div class="consequence-card"><div class="consequence-num">' + (ci === 0 ? 'Primero...' : 'Paso ' + (ci + 1)) + '</div><textarea class="consequence-input" data-si="' + si + '" data-ci="' + ci + '" placeholder="' + (ci === 0 ? '¿Qué pasaría?' : '¿Y después?') + '">' + s.consequences[ci] + '</textarea></div>';
+                    }
+                    scenariosHtml += '<div class="scenario"><div class="scenario-header"><div class="scenario-dot" style="background:' + s.color + '"></div><input type="text" class="scenario-label" data-si="' + si + '" value="' + s.label + '" style="color:' + s.color + '">' + (scenarios.length > 1 ? '<button class="scenario-remove" data-si="' + si + '">×</button>' : '') + '</div><div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:8px">CONSECUENCIAS →</div><div class="consequences-scroll">' + conseqHtml + '</div></div>';
+                }
+                return '<div class="card card-accent"><div class="label">❓ Decisión o Problema</div><input type="text" class="input" id="problemInput" placeholder="¿Qué decisión necesitas analizar?" value="' + analysisData.problem + '"></div><div class="btn-group"><button class="btn btn-primary btn-sm" id="addScenarioBtn">+ Escenario</button><button class="btn btn-secondary btn-sm" id="clearAnalysisBtn">Limpiar</button></div>' + scenariosHtml + '<div class="card card-success"><div class="label" style="color:#6ee7b7">✓ Decisión Final</div><input type="text" class="input mb-16" id="finalDecisionInput" placeholder="Decidí..." value="' + analysisData.finalDecision + '"><textarea class="input textarea mb-16" id="reasoningInput" placeholder="¿Por qué elegí esta opción?">' + analysisData.reasoning + '</textarea><div class="label" style="color:#6ee7b7">📅 ¿Cuándo sabrás el resultado?</div><input type="date" class="input mb-20" id="expectedDateInput" value="' + analysisData.expectedDate + '" style="max-width:200px"><button class="btn btn-success" id="saveDecisionBtn">💾 Guardar Decisión</button></div>';
+            }
+            
+            function renderHistory() {
+                if (selectedDecision) return renderDecisionDetail();
+                var pending = decisions.filter(function(d) { return !d.outcome; });
+                var completed = decisions.filter(function(d) { return d.outcome; });
+                var filtered = historyFilter === 'pending' ? pending : historyFilter === 'completed' ? completed : decisions;
+                var cardsHtml = '';
+                if (filtered.length === 0) {
+                    cardsHtml = '<div class="empty-state"><div class="empty-icon">📭</div><p>No hay decisiones</p></div>';
+                } else {
+                    for (var i = 0; i < filtered.length; i++) {
+                        var d = filtered[i];
+                        cardsHtml += '<div class="history-card ' + (d.outcome ? 'completed' : 'pending') + '" data-id="' + d.id + '"><div class="history-date">' + formatDate(d.createdAt) + '</div><div class="history-problem">' + d.problem + '</div><div class="history-decision">→ ' + d.finalDecision + '</div><div class="badge ' + (d.outcome ? 'badge-success' : 'badge-pending') + '">' + (d.outcome ? getRatingEmoji(d.outcomeRating) + ' ' + getRatingLabel(d.outcomeRating) : '⏳ Esperando resultado') + '</div></div>';
+                    }
+                }
+                return '<div class="stats-grid"><div class="stat-card"><div class="stat-number">' + decisions.length + '</div><div class="stat-label">Total</div></div><div class="stat-card"><div class="stat-number text-warning">' + pending.length + '</div><div class="stat-label">Pendientes</div></div><div class="stat-card"><div class="stat-number text-success">' + completed.length + '</div><div class="stat-label">Completadas</div></div></div><div class="filter-tabs"><button class="filter-tab' + (historyFilter === 'all' ? ' active' : '') + '" data-filter="all">Todas</button><button class="filter-tab' + (historyFilter === 'pending' ? ' active' : '') + '" data-filter="pending">⏳ Pendientes</button><button class="filter-tab' + (historyFilter === 'completed' ? ' active' : '') + '" data-filter="completed">✅ Completadas</button></div>' + cardsHtml;
+            }
+            
+            function renderDecisionDetail() {
+                var d = selectedDecision;
+                var scenariosHtml = '';
+                if (d.scenarios) {
+                    for (var i = 0; i < d.scenarios.length; i++) {
+                        var s = d.scenarios[i];
+                        var conseqs = s.consequences.filter(function(c) { return c; }).join(' → ') || 'Sin consecuencias';
+                        scenariosHtml += '<div style="background:var(--bg-primary);border-radius:10px;padding:12px;margin-bottom:10px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><div style="width:10px;height:10px;border-radius:50%;background:' + s.color + '"></div><span style="color:' + s.color + ';font-weight:600">' + s.label + '</span></div><p style="font-size:0.85rem;color:var(--text-secondary)">' + conseqs + '</p></div>';
+                    }
+                }
+                var ratingBtns = '';
+                for (var r = 1; r <= 5; r++) {
+                    ratingBtns += '<button class="rating-btn' + (outcomeRating === r ? ' selected' : '') + '" data-rating="' + r + '">' + getRatingEmoji(r) + '</button>';
+                }
+                var outcomeSection = d.outcome ? '<div class="card card-success"><div class="label" style="color:#6ee7b7">Resultado Real</div><div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><span style="font-size:1.5rem">' + getRatingEmoji(d.outcomeRating) + '</span><span style="color:' + getRatingColor(d.outcomeRating) + ';font-weight:600">' + getRatingLabel(d.outcomeRating) + '</span></div><p>' + d.outcome + '</p></div>' : '<div class="card card-success"><div class="label" style="color:#6ee7b7">📝 Registrar Resultado</div><p style="color:var(--text-secondary);margin-bottom:16px">¿Cómo salió esta decisión?</p><div class="rating-selector">' + ratingBtns + '</div><p style="text-align:center;margin-bottom:16px;color:' + getRatingColor(outcomeRating) + ';font-weight:600">' + getRatingLabel(outcomeRating) + '</p><textarea id="outcomeText" class="input textarea mb-16" placeholder="Describe qué sucedió..."></textarea><button class="btn btn-success" id="saveOutcomeBtn">✓ Guardar Resultado</button></div>';
+                return '<button class="btn btn-secondary btn-sm mb-20" id="backBtn">← Volver</button><div class="card card-accent"><div class="label">Problema/Decisión</div><p style="font-size:1.1rem;margin-bottom:20px">' + d.problem + '</p><div class="label">Decisión Tomada</div><p style="color:var(--success);font-weight:600;margin-bottom:20px">→ ' + d.finalDecision + '</p>' + (d.reasoning ? '<div class="label">Razonamiento</div><p style="color:var(--text-secondary);margin-bottom:20px">' + d.reasoning + '</p>' : '') + '<div class="label">Escenarios Analizados</div>' + scenariosHtml + '</div>' + outcomeSection;
+            }
+            
+            function renderProfile() {
+                var completed = decisions.filter(function(d) { return d.outcome; });
+                var avgRating = completed.length > 0 ? (completed.reduce(function(sum, d) { return sum + (d.outcomeRating || 0); }, 0) / completed.length).toFixed(1) : '-';
+                return '<div class="card card-accent"><div style="text-align:center;margin-bottom:20px"><div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 16px">👤</div><h2 style="font-size:1.2rem;margin-bottom:4px">' + (currentUser.displayName || 'Usuario') + '</h2><p style="color:var(--text-muted);font-size:0.9rem">' + (currentUser.email || '') + '</p></div></div><div class="card"><div class="label">📊 Estadísticas</div><div class="stats-grid"><div class="stat-card"><div class="stat-number">' + decisions.length + '</div><div class="stat-label">Total</div></div><div class="stat-card"><div class="stat-number text-warning">' + decisions.filter(function(d) { return !d.outcome; }).length + '</div><div class="stat-label">Pendientes</div></div><div class="stat-card"><div class="stat-number text-success">' + completed.length + '</div><div class="stat-label">Completadas</div></div></div>' + (completed.length > 0 ? '<div style="text-align:center;padding:16px;background:var(--bg-primary);border-radius:12px"><div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:8px">PROMEDIO</div><div style="font-size:2rem;font-weight:700">' + avgRating + ' <span style="font-size:1rem;color:var(--text-muted)">/ 5</span></div></div>' : '') + '</div><div class="card"><div class="label">🔒 Seguridad</div><button class="btn btn-secondary mb-12" id="changePatternBtn">🔐 Cambiar Patrón</button><button class="btn btn-secondary" id="deletePatternBtn" style="border-color:#7f1d1d;color:#fecaca">🗑️ Eliminar Patrón</button></div><div class="card"><div class="label">⚙️ Cuenta</div><button class="btn btn-danger" id="logoutBtn">Cerrar Sesión</button></div>';
+            }
+            
+            // Función para seleccionar punto del patrón
+            function selectDot(n) {
+                console.log('Dot clicked:', n);
+                if (selectedPattern.indexOf(n) < 0) {
+                    selectedPattern.push(n);
+                    console.log('Pattern now:', selectedPattern);
+                    render();
+                }
+            }
+            
+            // Event listeners
+            document.addEventListener('click', function(e) {
+                var target = e.target;
+                var id = target.id;
+                
+                console.log('Click on:', id || target.className);
+                
+                // Pattern dots - verificar si es un punto o su contenido
+                if (target.classList.contains('pattern-dot') || target.classList.contains('pattern-dot-inner')) {
+                    var dot = target.classList.contains('pattern-dot') ? target : target.parentElement;
+                    var dotId = dot.id;
+                    if (dotId && dotId.startsWith('dot')) {
+                        var n = parseInt(dotId.replace('dot', ''));
+                        selectDot(n);
+                    }
+                    return;
+                }
+                
+                // Login
+                if (id === 'switchLink') {
+                    isRegisterMode = !isRegisterMode;
+                    document.getElementById('loginTitle').textContent = isRegisterMode ? 'Crear Cuenta' : 'Iniciar Sesión';
+                    document.getElementById('loginBtn').textContent = isRegisterMode ? 'Crear Cuenta' : 'Entrar';
+                    document.getElementById('switchText').textContent = isRegisterMode ? '¿Ya tienes cuenta?' : '¿No tienes cuenta?';
+                    target.textContent = isRegisterMode ? 'Inicia sesión' : 'Regístrate';
+                }
+                if (id === 'googleBtn') {
+                    auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+                }
+                
+                // Pattern buttons
+                if (id === 'clearPatternBtn') {
+                    selectedPattern = [];
+                    patternStep = 1;
+                    confirmPattern = null;
+                    render();
+                }
+                if (id === 'confirmPatternBtn') {
+                    checkPattern();
+                }
+                
+                // Navigation
+                if (target.closest('.nav-item')) {
+                    var tab = target.closest('.nav-item').getAttribute('data-tab');
+                    if (tab) { activeTab = tab; selectedDecision = null; render(); }
+                }
+                
+                // Analysis
+                if (id === 'addScenarioBtn') {
+                    var colors = ['#8b5cf6', '#f59e0b', '#ec4899', '#06b6d4', '#84cc16'];
+                    var newId = scenarios.length + 1;
+                    scenarios.push({ id: newId, label: 'Escenario ' + newId, color: colors[(newId - 1) % colors.length], consequences: ['','','','','','','','','',''] });
+                    render();
+                }
+                if (id === 'clearAnalysisBtn') { clearAnalysis(); render(); }
+                if (target.closest('.scenario-remove')) {
+                    var si = parseInt(target.closest('.scenario-remove').getAttribute('data-si'));
+                    if (scenarios.length > 1) { scenarios.splice(si, 1); render(); }
+                }
+                if (id === 'saveDecisionBtn') { saveDecision(); }
+                
+                // History
+                if (target.closest('.filter-tab')) {
+                    historyFilter = target.closest('.filter-tab').getAttribute('data-filter');
+                    render();
+                }
+                if (target.closest('.history-card')) {
+                    var hid = target.closest('.history-card').getAttribute('data-id');
+                    selectedDecision = decisions.find(function(d) { return d.id === hid; });
+                    outcomeRating = selectedDecision.outcomeRating || 3;
+                    render();
+                }
+                if (id === 'backBtn') { selectedDecision = null; render(); }
+                if (target.closest('.rating-btn')) {
+                    outcomeRating = parseInt(target.closest('.rating-btn').getAttribute('data-rating'));
+                    render();
+                }
+                if (id === 'saveOutcomeBtn') { saveOutcome(); }
+                
+                // Profile
+                if (id === 'changePatternBtn') { patternStep = 1; confirmPattern = null; selectedPattern = []; currentScreen = 'pattern-setup'; render(); }
+                if (id === 'deletePatternBtn') { if (confirm('¿Eliminar patrón?')) { localStorage.removeItem('pattern_' + currentUser.uid); patternStep = 1; confirmPattern = null; selectedPattern = []; currentScreen = 'pattern-setup'; render(); } }
+                if (id === 'logoutBtn') { if (confirm('¿Cerrar sesión?')) auth.signOut(); }
+            });
+            
+            // Touch events para móvil
+            document.addEventListener('touchend', function(e) {
+                var target = e.target;
+                if (target.classList.contains('pattern-dot') || target.classList.contains('pattern-dot-inner')) {
+                    e.preventDefault();
+                    var dot = target.classList.contains('pattern-dot') ? target : target.parentElement;
+                    var dotId = dot.id;
+                    if (dotId && dotId.startsWith('dot')) {
+                        var n = parseInt(dotId.replace('dot', ''));
+                        selectDot(n);
+                    }
+                }
+            }, { passive: false });
+            
+            document.addEventListener('submit', function(e) {
+                if (e.target.id === 'loginForm') {
+                    e.preventDefault();
+                    var email = document.getElementById('email').value;
+                    var password = document.getElementById('password').value;
+                    var errorDiv = document.getElementById('loginError');
+                    var promise = isRegisterMode ? auth.createUserWithEmailAndPassword(email, password) : auth.signInWithEmailAndPassword(email, password);
+                    promise.catch(function(error) {
+                        var msgs = { 'auth/email-already-in-use': 'Correo ya registrado', 'auth/invalid-email': 'Correo inválido', 'auth/weak-password': 'Mínimo 6 caracteres', 'auth/user-not-found': 'No existe esta cuenta', 'auth/wrong-password': 'Contraseña incorrecta' };
+                        errorDiv.textContent = msgs[error.code] || 'Error';
+                        errorDiv.classList.remove('hidden');
+                    });
+                }
+            });
+            
+            document.addEventListener('change', function(e) {
+                var target = e.target;
+                if (target.id === 'problemInput') analysisData.problem = target.value;
+                if (target.id === 'finalDecisionInput') analysisData.finalDecision = target.value;
+                if (target.id === 'reasoningInput') analysisData.reasoning = target.value;
+                if (target.id === 'expectedDateInput') analysisData.expectedDate = target.value;
+                if (target.classList.contains('scenario-label')) {
+                    var si = parseInt(target.getAttribute('data-si'));
+                    scenarios[si].label = target.value;
+                }
+                if (target.classList.contains('consequence-input')) {
+                    var si2 = parseInt(target.getAttribute('data-si'));
+                    var ci = parseInt(target.getAttribute('data-ci'));
+                    scenarios[si2].consequences[ci] = target.value;
+                }
+            });
+            
+            function checkPattern() {
+                var pattern = selectedPattern.join('-');
+                console.log('Checking pattern:', pattern, 'Step:', patternStep);
+                
+                if (currentScreen === 'pattern-setup') {
+                    if (patternStep === 1) {
+                        confirmPattern = pattern;
+                        patternStep = 2;
+                        selectedPattern = [];
+                        render();
+                    } else {
+                        if (pattern === confirmPattern) {
+                            localStorage.setItem('pattern_' + currentUser.uid, pattern);
+                            currentScreen = 'main';
+                            render();
+                        } else {
+                            showPatternError('Los patrones no coinciden');
+                            patternStep = 1;
+                            confirmPattern = null;
+                            selectedPattern = [];
+                            render();
+                        }
+                    }
+                } else {
+                    var saved = localStorage.getItem('pattern_' + currentUser.uid);
+                    if (pattern === saved) {
+                        currentScreen = 'main';
+                        render();
+                    } else {
+                        showPatternError('Patrón incorrecto');
+                        selectedPattern = [];
+                        render();
+                    }
+                }
+            }
+            
+            function showPatternError(msg) {
+                setTimeout(function() {
+                    var el = document.getElementById('patternError');
+                    if (el) { el.textContent = msg; el.classList.remove('hidden'); }
+                }, 100);
+            }
+            
+            function clearAnalysis() {
+                scenarios = [
+                    { id: 1, label: 'Mejor escenario', color: '#10b981', consequences: ['','','','','','','','','',''] },
+                    { id: 2, label: 'Escenario probable', color: '#3b82f6', consequences: ['','','','','','','','','',''] },
+                    { id: 3, label: 'Peor escenario', color: '#ef4444', consequences: ['','','','','','','','','',''] }
+                ];
+                analysisData = { problem: '', finalDecision: '', reasoning: '', expectedDate: '' };
+            }
+            
+            function saveDecision() {
+                if (!analysisData.problem || !analysisData.finalDecision) { alert('Completa el problema y la decisión final'); return; }
+                db.collection('users').doc(currentUser.uid).collection('decisions').add({
+                    problem: analysisData.problem,
+                    scenarios: JSON.parse(JSON.stringify(scenarios)),
+                    finalDecision: analysisData.finalDecision,
+                    reasoning: analysisData.reasoning,
+                    expectedDate: analysisData.expectedDate || null,
+                    outcome: null,
+                    outcomeRating: null,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                }).then(function() {
+                    showToast('✅ Decisión guardada');
+                    clearAnalysis();
+                    activeTab = 'history';
+                    render();
+                });
+            }
+            
+            function saveOutcome() {
+                var text = document.getElementById('outcomeText').value;
+                if (!text) return;
+                db.collection('users').doc(currentUser.uid).collection('decisions').doc(selectedDecision.id).update({
+                    outcome: text,
+                    outcomeRating: outcomeRating
+                }).then(function() {
+                    showToast('✅ Resultado guardado');
+                    selectedDecision = null;
+                    render();
+                });
+            }
+            
+            function formatDate(date) { return date.toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' }); }
+            function getRatingEmoji(r) { return ['😞', '😕', '😐', '🙂', '😄'][r - 1] || '😐'; }
+            function getRatingLabel(r) { return ['Muy mal', 'Mal', 'Regular', 'Bien', 'Excelente'][r - 1] || 'Regular'; }
+            function getRatingColor(r) { return ['#ef4444', '#f97316', '#eab308', '#22c55e', '#10b981'][r - 1] || '#eab308'; }
+            function showToast(msg) {
+                var toast = document.createElement('div');
+                toast.className = 'toast';
+                toast.textContent = msg;
+                document.body.appendChild(toast);
+                setTimeout(function() { toast.remove(); }, 3000);
+            }
+        }
+    })();
+    </script>
+</body>
+</html>
